@@ -1,4 +1,4 @@
-#Query 1: Total Confirmed Cases
+<--------------- #Query 1: Total Confirmed Cases ----------------->
 
 SELECT
   SUM(cumulative_confirmed) AS total_cases_worldwide
@@ -8,7 +8,7 @@ WHERE
   date = "2020-04-15"
   
   
-#Query 2: Worst Affected Areas
+<---------------- #Query 2: Worst Affected Areas ----------------->
 
 SELECT
     COUNT(*) AS count_of_states
@@ -28,7 +28,7 @@ GROUP BY
 WHERE death_count > 100
 
 
-#Query 3: Identifying Hotspots
+<-------------------- #Query 3: Identifying Hotspots ---------------------->
 
 SELECT * FROM (
 SELECT subregion1_name as state, sum(cumulative_confirmed) as total_confirmed_cases
@@ -38,14 +38,14 @@ GROUP BY subregion1_name
 ORDER BY total_confirmed_cases DESC ) WHERE total_confirmed_cases > 1000
 
 
-#Query 4: Fatality Ratio
+<--------------------- #Query 4: Fatality Ratio ------------------>
 
 SELECT SUM(cumulative_confirmed) AS total_confirmed_cases, SUM(cumulative_deceased) AS total_deaths, (SUM(cumulative_deceased)/SUM(cumulative_confirmed))*100 AS case_fatality_ratio
 FROM `bigquery-public-data.covid19_open_data.covid19_open_data`
 WHERE country_name="Italy" AND date BETWEEN "2020-04-01" AND "2020-04-30"
 
 
-#Query 5: Identifying specific day
+<---------------------- #Query 5: Identifying specific day ---------------->
 
 SELECT
  date
@@ -58,7 +58,7 @@ ORDER BY date
 LIMIT 1
 
 
-#Query 6: Finding days with zero net new cases
+<--------------------- #Query 6: Finding days with zero net new cases --------------------->
 
 WITH india_cases_by_date AS (
   SELECT
@@ -91,7 +91,7 @@ WHERE
   net_new_cases = 0
   
   
-#Query 7: Doubling rate
+<----------------- #Query 7: Doubling rate ----------------->
 
 WITH us_cases_by_date AS (
   SELECT
@@ -128,7 +128,7 @@ WHERE
   percentage_increase > 10
   
   
-#Query 8: Recovery rate
+<------------------- #Query 8: Recovery rate ------------------>
 
 WITH cases_by_country AS (
   SELECT
@@ -160,7 +160,7 @@ ORDER BY recovery_rate DESC
 LIMIT 10
 
 
-#Query 9: CDGR - Cumulative Daily Growth Rate
+<------------------ #Query 9: CDGR - Cumulative Daily Growth Rate --------------------->
 
 WITH
 france_cases AS (
@@ -190,7 +190,7 @@ LIMIT 1
 select first_day_cases, last_day_cases, days_diff, POW((last_day_cases/first_day_cases),(1/days_diff))-1 as cdgr
 from summary
 
-->There is also a second query for #9, run this if the first one doesn't give a green tick
+<----------------- There is also a second query for #9, run this if the first one doesn't give a green tick ------------------->
 
 WITH france_cases AS (
 SELECT date,
@@ -211,9 +211,37 @@ LIMIT 1 )
 select first_day_cases, last_day_cases, days_diff, 
 POW((last_day_cases/first_day_cases),(1/days_diff))-1 as cdgr
 from summary
+                                                                                         
+<----------------- There is also a second query for #9, run this if the first one doesn't give a green tick ------------------->
 
-
-#Create a Datastudio report (Query only)
+WITH
+  france_cases AS (
+  SELECT
+    date,
+    SUM(cumulative_confirmed) AS total_cases
+  FROM
+    `bigquery-public-data.covid19_open_data.covid19_open_data`
+  WHERE
+    country_name="France"
+    AND date IN ('2020-01-24',
+      '2020-05-10')
+  GROUP BY
+    date
+  ORDER BY
+    date)
+, summary as (
+SELECT
+  total_cases AS first_day_cases,
+  LEAD(total_cases) OVER(ORDER BY date) AS last_day_cases,
+  DATE_DIFF(LEAD(date) OVER(ORDER BY date),date, day) AS days_diff
+FROM
+  france_cases
+LIMIT 1
+)
+select first_day_cases, last_day_cases, days_diff, POW((last_day_cases/first_day_cases),(1/days_diff))-1 as cdgr
+from summary
+                                                                                         
+<------------------ #Create a Datastudio report (Query only) ---------------------->
 
 SELECT
   date, SUM(cumulative_confirmed) AS country_cases,
@@ -225,3 +253,12 @@ WHERE
   AND '2020-04-30'
   AND country_name='United States of America'
 GROUP BY date
+                                                                                         
+
+After input the '10' query
+Click "Explore Data" > "Explore with Data Studio"
+Authorize your BigQuery in Data Studio
+Save your Data Studio Explorer
+Get Started > Check "I acknowlegde..." > Accept > Yes to All > Done
+Check Your Progress                                                                                         
+                                                                   
